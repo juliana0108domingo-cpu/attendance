@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Attendance Checklist</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#eef2fb;--card:#fff;--ink:#1b2a5c;--mut:#6b7494;--line:#d9dff0;--juls:#ffd6dd;--iya:#e6d6f7;--ok:#1f9d55;--no:#d64545;--hd:#1b2a5c;--hdt:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#12162a;--card:#1c2240;--ink:#e8ecff;--mut:#9aa3c7;--line:#2c3563;--juls:#5a2b3a;--iya:#40305e;--hd:#2a3470}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;padding:16px}
+h1{margin:0 0 4px;font-size:22px}.sub{color:var(--mut);font-size:13px;margin-bottom:12px}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer}
+.wk{font-weight:700;min-width:200px;text-align:center}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px}
+.panel h3{margin:0 0 6px;font-size:14px}
+.sw{display:inline-flex;gap:6px;align-items:center;margin:2px 14px 2px 0;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(6,minmax(170px,1fr));gap:8px;overflow-x:auto;padding-bottom:6px}
+.col h2{margin:0 0 6px;background:var(--hd);color:var(--hdt);font-size:13px;text-align:center;padding:6px;border-radius:6px}
+.col h2 small{display:block;font-weight:400;opacity:.8}
+.s{border-radius:8px;padding:8px;margin-bottom:6px;font-size:12px;border:2px solid transparent}
+.s.juls{background:var(--juls)}.s.iya{background:var(--iya)}
+.s.st1{border-color:var(--ok)}.s.st2{border-color:var(--no);opacity:.65}
+.s b{font-size:13px;display:block}.s .m{color:var(--mut);font-size:11px}.s .t{font-weight:700;margin:3px 0}
+.s .st{width:100%;margin-top:6px;padding:4px;font-size:12px}
+.tag{font-size:10px;background:var(--card);border-radius:4px;padding:1px 4px;margin-left:4px}
+.bill table{width:100%;border-collapse:collapse;font-size:12px}.bill td,.bill th{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top}
+.tot{margin:8px 0;font-size:13px}
+</style></head><body>
+<h1>Attendance Checklist</h1>
+<div class="sub">Week runs Saturday to Friday, ready for Friday billing. Tap a session to cycle: blank → attended → cancelled.</div>
+<div class="bar"><button id="prev">◀ Prev</button><div class="wk" id="wk"></div><button id="next">Next ▶</button><button id="today">This week</button><button id="reset">Clear week</button></div>
+<div class="panel"><h3>Fortnightly (F) – attending this week?</h3><div id="fn"></div></div>
+<div class="grid" id="grid"></div>
+<div class="panel bill" style="margin-top:12px"><h3>Friday billing summary (attended only)</h3><div class="tot" id="tot"></div><div style="overflow-x:auto"><table id="bt"></table></div><button id="copy" style="margin-top:8px">Copy summary</button></div>
+<script>
+const D=[["Sat","Tyler Geeman","564012990","10:30 AM – 2:30 PM",[["Saturday (Core)","04_104_0136_6_1"]],"j"],
+["Sat","Joshua Hourihan","430649350","10:00 AM – 1:00 PM",[["Saturday (Core)","04_104_0136_6_1"]],"j",1],
+["Mon","Jack Skilton","431847605","10:00 AM – 12:00 PM",[["Finding and Keeping a Job","10_806_0133_5_1"]],"i"],
+["Tue","Jayce Thomas","431746130","10:00 AM – 12:00 PM, 12:30 PM – 2:30 PM",[["Weekday (Core)","04_102_0136_6_1"]],"j"],
+["Tue","Summer Barnes","430270552","10:00 AM – 2:00 PM",[["Weekday (Core)","04_102_0136_6_1"]],"j"],
+["Tue","Dallas Taylor Rose","430680062","10:00 AM – 2:00 PM, 2:00 PM – 6:00 PM",[["Weekday (Core)","04_102_0136_6_1"]],"j"],
+["Tue","Cortez Kennedy","430680028","3:00 PM – 5:00 PM",[["Weekday (Core)","04_102_0136_6_1"]],"i"],
+["Tue","Luke Cavanagh","430717594","10:00 AM – 2:00 PM",[["Weekday (Core)","04_102_0136_6_1"]],"i"],
+["Tue","Ryan Kelly","430650335","10:00 AM – 2:00 PM",[["Increased Social & Community Participation (CB)","09_009_0117_6_3"]],"i"],
+["Wed","Rafael Gaspar","431473672","12:30 PM – 3:30 PM",[["Finding and Keeping a Job (CB)","10_016_0102_5_3"],["Finding and Keeping a Job (Employment Assistance)","10_016_0102_5_3"]],"i"],
+["Wed","Dallas Taylor Rose","430680062","10:00 AM – 2:00 PM, 2:00 PM – 6:00 PM",[["Weekday (Core)","04_102_0136_6_1"]],"j"],
+["Wed","Dominic O’ Donell","431042665","2:00 PM – 6:00 PM",[["Access Community Social and Rec Activ - Standard - Weekday","04_104_0125_6_1"]],"j"],
+["Thu","Jayce Thomas","431746130","10:00 AM – 2:00 PM, 2:00 PM – 6:00 PM",[["Weekday (Core)","04_102_0136_6_1"]],"j"],
+["Thu","Summer Barnes","430270552","10:00 AM – 2:00 PM",[["Weekday (Core)","04_102_0136_6_1"]],"j"],
+["Thu","Cortez Kennedy","430680028","3:00 PM – 5:00 PM",[["Weekday (Core)","04_102_0136_6_1"]],"i"],
+["Thu","Mia Cartwright","538141635","12:00 PM – 4:00 PM",[["Weekday (Core)","04_102_0136_6_1"]],"j"],
+["Thu","Alyx Lailah Minette Schorel-Withers","431975358","3:00 PM – 6:00 PM",[["Increased Social & Community Participation (Capacity Building)","09_009_0117_6_3"]],"j",1],
+["Fri","Michaela Offord","431029880","10:00 AM – 12:00 PM",[["Weekday (Core)","04_102_0136_6_1"]],"j",1]];
+const OFF={Sat:0,Mon:2,Tue:3,Wed:4,Thu:5,Fri:6},ORDER=["Sat","Mon","Tue","Wed","Thu","Fri"],FULL={Sat:"Saturday",Mon:"Monday",Tue:"Tuesday",Wed:"Wednesday",Thu:"Thursday",Fri:"Friday"};
+const KEY="aits-attendance-v1";let S={att:{},anchor:{}};
+try{S=Object.assign(S,JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const DAY=864e5;function satOf(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+1)%7));return x}
+let start=satOf(new Date());
+const wIdx=d=>Math.round(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/DAY/7);
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const fmt=d=>d.toLocaleDateString("en-AU",{day:"numeric",month:"short"});
+const addD=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const fn=[...new Set(D.filter(r=>r[6]).map(r=>r[1]))];
+function attending(n){const w=wIdx(start);if(S.anchor[n]==null)S.anchor[n]=w;return Math.abs(w-S.anchor[n])%2===0}
+function sid(r){return iso(start)+"|"+r[0]+r[1]}
+function visible(){return D.filter(r=>!r[6]||attending(r[1]))}
+function render(){
+ document.getElementById("wk").textContent=fmt(start)+" (Sat) – "+fmt(addD(start,6))+" (Fri)";
+ document.getElementById("fn").innerHTML=fn.map((n,i)=>`<label class="sw"><input type="checkbox" data-n="${i}" ${attending(n)?"checked":""}> ${n}</label>`).join("");
+ document.querySelectorAll("#fn input").forEach(c=>c.onchange=()=>{const n=fn[c.dataset.n],w=wIdx(start);S.anchor[n]=c.checked?w:w+1;save();render()});
+ const g=document.getElementById("grid");g.innerHTML="";
+ const vis=visible();
+ ORDER.forEach(dy=>{const c=document.createElement("div");c.className="col";
+  c.innerHTML=`<h2>${FULL[dy]}<small>${fmt(addD(start,OFF[dy]))}</small></h2>`;
+  vis.filter(r=>r[0]===dy).forEach(r=>{const st=S.att[sid(r)]||0,d=document.createElement("div");
+   d.className="s "+(r[5]==="i"?"iya":"juls")+" st"+st;
+   d.innerHTML=`<b>${r[1]}${r[6]?'<span class="tag">F</span>':""}</b><div class="m">NDIS: ${r[2]}</div><div class="t">${r[3]}</div>`+r[4].map(s=>`<div class="m">${s[0]}<br>${s[1]}</div>`).join("")+`<button class="st">${["☐ Not marked","✔ Attended","✖ Cancelled"][st]}</button>`;
+   d.querySelector("button").onclick=()=>{S.att[sid(r)]=(st+1)%3;save();render()};c.appendChild(d)});
+  g.appendChild(c)});
+ bill(vis)}
+function bill(vis){
+ const a=vis.filter(r=>S.att[sid(r)]===1),x=vis.filter(r=>S.att[sid(r)]===2),p=vis.length-a.length-x.length;
+ document.getElementById("tot").textContent=`${a.length} attended · ${x.length} cancelled · ${p} not marked yet`;
+ document.getElementById("bt").innerHTML="<tr><th>Date</th><th>Participant</th><th>NDIS</th><th>Time</th><th>Item(s)</th></tr>"+a.map(r=>`<tr><td>${FULL[r[0]].slice(0,3)} ${fmt(addD(start,OFF[r[0]]))}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4].map(s=>s[0]+" – "+s[1]).join("<br>")}</td></tr>`).join("");
+ window._txt=a.map(r=>[FULL[r[0]]+" "+fmt(addD(start,OFF[r[0]])),r[1],r[2],r[3],r[4].map(s=>s[1]).join(" / ")].join("\t")).join("\n")}
+prev.onclick=()=>{start=addD(start,-7);render()};next.onclick=()=>{start=addD(start,7);render()};today.onclick=()=>{start=satOf(new Date());render()};
+reset.onclick=()=>{if(confirm("Clear all marks for this week?")){D.forEach(r=>delete S.att[sid(r)]);save();render()}};
+copy.onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(window._txt||"").then(()=>{copy.textContent="Copied ✔";setTimeout(()=>copy.textContent="Copy summary",1500)},()=>{})};
+render();
+</script></body></html>
